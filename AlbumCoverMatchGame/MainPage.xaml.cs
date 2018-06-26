@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AlbumCoverMatchGame.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -15,9 +16,9 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace AlbumCoverMatchGame
 {
@@ -26,9 +27,14 @@ namespace AlbumCoverMatchGame
     /// </summary>
     public sealed partial class MainPage : Page
     {
+
+        private ObservableCollection<Song> Songs;
+        
         public MainPage()
         {
             this.InitializeComponent();
+
+            Songs = new ObservableCollection<Song>();
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
@@ -47,6 +53,8 @@ namespace AlbumCoverMatchGame
             //Pick 10 random Songs
             var randomSongs = await PickRandomSongs(allSongs);
 
+
+            await PopulateSongListAsync(randomSongs);
 
 
         }
@@ -109,6 +117,37 @@ namespace AlbumCoverMatchGame
             }
 
             return randomSongs;
+        }
+
+
+
+        private async Task PopulateSongListAsync(List<StorageFile> files)
+        {
+            int id = 0;
+            foreach ( var file in files)
+            {
+                MusicProperties songProperties = await file.Properties.GetMusicPropertiesAsync();
+
+                StorageItemThumbnail currentThumbnail = await file.GetThumbnailAsync(
+                    ThumbnailMode.MusicView,
+                    200,
+                    ThumbnailOptions.UseCurrentScale);
+
+                var albumCover = new BitmapImage();
+                albumCover.SetSource(currentThumbnail);
+
+                var song = new Song();
+                song.Id = id++;
+                song.Title = songProperties.Title;
+                song.Album = songProperties.Album;
+                song.Artist = songProperties.Artist;
+                song.AlbumCover = albumCover;
+                song.SongFile = file;
+                song.Selected = false;
+
+                Songs.Add(song);
+
+            }
         }
 
     }
