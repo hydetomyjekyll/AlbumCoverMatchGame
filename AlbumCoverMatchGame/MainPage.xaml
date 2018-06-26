@@ -9,6 +9,6 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-
+        <Button Content="Get Weather" Click="Button_Click"/>
     </Grid>
 </Page>
