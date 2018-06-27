@@ -31,6 +31,11 @@
         </Storyboard>
     </Page.Resources>
     
+        <ScrollViewer>
+
+
+
+    
     <Grid>
 
         <Grid.RowDefinitions>
@@ -39,43 +44,68 @@
         </Grid.RowDefinitions>
 
         <StackPanel Margin="20">
-            <ProgressBar Name="MyProgressBar" Maximum="100" Minimum="0" Value="100" Height="20" Foreground="Blue"/>
-            <TextBlock Name="InstructionTextBlock" Text="" Foreground="Blue" HorizontalAlignment="Center" />
+            <ProgressBar Name="MyProgressBar" Maximum="100" Minimum="0" Value="100" Height="30" Foreground="Blue"/>
+            <TextBlock Name="InstructionTextBlock" Text="" Foreground="Blue" HorizontalAlignment="Center" FontSize="22" />
             <MediaElement Name="MyMediaElement" AutoPlay="True"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Vertical">
-            <GridView Name="SoundGridView" 
-                      IsItemClickEnabled="True" 
-                      ItemClick="SoundGridView_ItemClick"
-                      ItemsSource="{x:Bind Songs}"
-                      HorizontalAlignment="Center">
-                <GridView.ItemTemplate>
-                    <DataTemplate x:DataType="data:Song">
-                        <Grid>
-                            <Image Name="AlbumArtImage" 
-                                   Height="130" 
-                                   Width="130" 
-                                   Source="{x:Bind AlbumCover}"
-                                   Stretch="UniformToFill"
-                                   Margin="10"/>
-                        </Grid>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-            </GridView>
+        <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <TextBlock Name="ResultTextBlock"/>
-            <TextBlock Name="TitleTextBlock" />
-            <TextBlock Name="ArtistTextBlock" />
-            <TextBlock Name="AlbumTextBlock" />
+               
+            
+            
+                <GridView Name="SoundGridView" 
+                          IsItemClickEnabled="True" 
+                          ItemClick="SoundGridView_ItemClick"
+                          ItemsSource="{x:Bind Songs}"
+                          HorizontalAlignment="Center">
+                    <GridView.ItemTemplate>
+                        <DataTemplate x:DataType="data:Song">
+                            <Grid>
+                                <Image Name="AlbumArtImage" 
+                                       Height="130" 
+                                       Width="130" 
+                                       Source="{x:Bind AlbumCover}"
+                                       Stretch="UniformToFill"
+                                       Margin="10"/>
+                            </Grid>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
 
-            <Button Content="Play Again" 
-                    Background="Red" 
-                    Foreground="White"
-                    HorizontalAlignment="Center"
-                    Click="Button_Click"
-                    />
-        </StackPanel>
+                <StackPanel Grid.Row="1">
+                    <TextBlock Name="TotalScoreTextBlock" FontSize="24" HorizontalAlignment="Center" />
+                    <TextBlock Name="ScoreTextBlock" FontSize="18" HorizontalAlignment="Center" Margin="10"/>
+                    
+                    
+                    <Image Name="CorrectSongAlbumView" 
+                                Stretch="UniformToFill" 
+                                Width="150"
+                                Height="150"
+                                Margin="20,0,0,0"
+                                HorizontalAlignment="Center"/>
+
+
+                    <TextBlock Name="TitleTextBlock" FontSize="22" Foreground="DarkBlue" HorizontalAlignment="Center" Margin="10"/>
+                    <TextBlock Name="ArtistTextBlock" FontSize="18" Foreground="Blue" HorizontalAlignment="Center"/>
+                    <TextBlock Name="AlbumTextBlock" FontSize="16" Foreground="DeepSkyBlue" HorizontalAlignment="Center" Margin="0,5,0,20"/>
+                        
+                </StackPanel>
+            
+            
+                <Button Name="PlayAgainButton"
+                        Content="Play Again" 
+                        Background="Red" 
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        Click="PlayAgainButton_Click"
+                        Visibility="Collapsed"                        
+                        />
+            </Grid>
 
         <Grid Grid.RowSpan="2">
             <ProgressRing Name="StartupProgressRing"
@@ -86,4 +116,5 @@
                           Foreground="Gray"/>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </Page>

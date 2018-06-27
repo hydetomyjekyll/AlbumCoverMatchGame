@@ -34,6 +34,8 @@ namespace AlbumCoverMatchGame
 
         bool _playingMusic = false;
         int _round = 0;
+        int _selectedSongPosition;
+        int _totalScore = 0;
 
         public MainPage()
         {
@@ -63,22 +65,118 @@ namespace AlbumCoverMatchGame
 
 
 
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void PlayAgainButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayAgainButton.Visibility = Visibility.Collapsed;      
+            SoundGridView.Visibility = Visibility.Visible;
+
             StartupProgressRing.IsActive = true;
-            
+
             await PrepareNewGame();
 
             StartupProgressRing.IsActive = false;
+
+            StartCooldown();
+
         }
 
         private void SoundGridView_ItemClick(object sender, ItemClickEventArgs e)
         {
+
+            if (!_playingMusic) return;
+
+            CountDown.Pause();           
+            MyMediaElement.Pause();
+
+            //Get the selected song
+            var clickedSong = (Song)e.ClickedItem;
+           
+
+            var correctSong = Songs.FirstOrDefault(p => p.Id == _selectedSongPosition);
+
+
+           
+            int score;
+            String scorePrefix;
+            String titlePrefix;
+            SolidColorBrush brushScore;
+            SolidColorBrush brushTotal;
+
+            if(clickedSong == correctSong)
+            {               
+                score = (int)MyProgressBar.Value;
+                scorePrefix = "You were correct";
+                titlePrefix = "";
+                brushScore = new SolidColorBrush(Colors.Green);
+            }
+            else
+            {               
+                score = (int)MyProgressBar.Value * -1;
+                if(score < 0 && score > -100)
+                {
+                    score = -100 - score;
+                } else if (score == -100)
+                {
+                    score = -10;
+                }
+                scorePrefix = "Ooops! You missed this one...";
+                titlePrefix = "Correct Song : ";
+                brushScore = new SolidColorBrush(Colors.Red);
+            }
+           
+
+            Songs.Remove(correctSong);
             _round++;
-            StartCooldown();
+            _totalScore += score;
+
+            if(_totalScore >= 0)
+            {
+                brushTotal = new SolidColorBrush(Colors.DarkGreen);
+            }
+            else
+            {
+                brushTotal = new SolidColorBrush(Colors.DarkRed);
+            }
+
+            TotalScoreTextBlock.Text = String.Format("Total Score after {0} rounds is {1}", _round, _totalScore);
+            TotalScoreTextBlock.Foreground = brushTotal;
+
+            ScoreTextBlock.Text = String.Format("{0} .. Score : {1}",scorePrefix , score);
+            ScoreTextBlock.Foreground = brushScore;
+
+           
+            TitleTextBlock.Text =  String.Format("{0}{1}",titlePrefix ,correctSong.Title);
+            ArtistTextBlock.Text = String.Format("Performed By : {0}", correctSong.Artist);
+            AlbumTextBlock.Text = String.Format("On Album : {0}", correctSong.Album);
+
+            CorrectSongAlbumView.Source = correctSong.AlbumCover;
+
+            if(_round == 10)
+            {
+                GameOver();
+            }
+            else
+            {
+                StartCooldown();
+            }
+            
         }
 
+
+        private void GameOver()
+        {
+            PlayAgainButton.Visibility = Visibility.Visible;
+            SoundGridView.Visibility = Visibility.Collapsed;
+
+            _playingMusic = false;
+            SolidColorBrush brush = new SolidColorBrush(Colors.Blue);
+            MyProgressBar.Foreground = brush;
+            InstructionTextBlock.Text = String.Format("You scored {0} .. CLick on play again to restart", _totalScore);
+            InstructionTextBlock.Foreground = brush;
+
+            MyProgressBar.Value = 100;
+            CountDown.Stop();
+        }
 
         private async void CountDown_CompletedAsync(object sender, object e)
         {
@@ -144,6 +242,17 @@ namespace AlbumCoverMatchGame
 
             //Update the observable collection to make sure that the list updates in the UI
             await PopulateSongListAsync(randomSongs);
+
+            _totalScore = 0;
+            _round = 0;
+
+            InstructionTextBlock.Text = "Getting ready for a new game";
+            ScoreTextBlock.Text = "";
+            TotalScoreTextBlock.Text = "";
+            TitleTextBlock.Text = "";
+            ArtistTextBlock.Text = "";
+            AlbumTextBlock.Text = "";
+            CorrectSongAlbumView.Source = null;
         }
 
 
@@ -278,8 +387,11 @@ namespace AlbumCoverMatchGame
 
             randomSong.Selected = true;
             randomSong.Used = true;
+            _selectedSongPosition = randomSong.Id;
 
             return randomSong;
         }
+
+        
     }
 }
