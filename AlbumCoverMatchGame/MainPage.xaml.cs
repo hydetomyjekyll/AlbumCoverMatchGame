@@ -10,6 +10,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -30,6 +31,9 @@ namespace AlbumCoverMatchGame
 
         private ObservableCollection<Song> Songs;
         private ObservableCollection<StorageFile> allSongsFile;
+
+        bool _playingMusic = false;
+        int _round = 0;
 
         public MainPage()
         {
@@ -53,22 +57,69 @@ namespace AlbumCoverMatchGame
             await PrepareNewGame();
 
             StartupProgressRing.IsActive = false;
+
+            StartCooldown();
         }
 
 
 
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            StartupProgressRing.IsActive = true;
+            
+            await PrepareNewGame();
 
+            StartupProgressRing.IsActive = false;
         }
 
         private void SoundGridView_ItemClick(object sender, ItemClickEventArgs e)
         {
-
+            _round++;
+            StartCooldown();
         }
 
 
+        private async void CountDown_CompletedAsync(object sender, object e)
+        {
+            if (!_playingMusic)
+            {
+                var song = PickSong();
+
+                MyMediaElement.SetSource
+                    (await song.SongFile.OpenAsync(FileAccessMode.Read),
+                    song.SongFile.ContentType);
+
+
+                StartCountdown();
+            }
+            else
+            {
+                InstructionTextBlock.Text = "Time's up, Lets just see if you could get it right";
+                InstructionTextBlock.Foreground = new SolidColorBrush(Colors.Green);
+                //StartCooldown();
+            }
+        }
+
+        private void StartCooldown()
+        {
+            _playingMusic = false;
+            SolidColorBrush brush = new SolidColorBrush(Colors.Blue);
+            MyProgressBar.Foreground = brush;
+            InstructionTextBlock.Text = String.Format("Get Ready for Round {0}.....",_round + 1);
+            InstructionTextBlock.Foreground = brush;
+            CountDown.Begin();
+        }
+
+        private void StartCountdown()
+        {
+            _playingMusic = true;
+            SolidColorBrush brush = new SolidColorBrush(Colors.Red);
+            MyProgressBar.Foreground = brush;
+            InstructionTextBlock.Text = "GO! Guess what album the song belongs to!";
+            InstructionTextBlock.Foreground = brush;
+            CountDown.Begin();
+        }
 
 
         private async Task SetupMusicList()
@@ -86,7 +137,6 @@ namespace AlbumCoverMatchGame
         }
 
 
-
         private async Task PrepareNewGame()
         {
             //Pick 10 random Songs
@@ -95,7 +145,6 @@ namespace AlbumCoverMatchGame
             //Update the observable collection to make sure that the list updates in the UI
             await PopulateSongListAsync(randomSongs);
         }
-
 
 
         /// <summary>
@@ -118,9 +167,6 @@ namespace AlbumCoverMatchGame
                 await RetrieveFilesAndFolder(item);
             }
         }
-
-
-
 
 
 
@@ -216,6 +262,24 @@ namespace AlbumCoverMatchGame
 
                 Songs.Add(song);
             }
-        }      
+        }
+
+
+        /// <summary>
+        /// Returns a random song from the list of songs that haven't been played before
+        /// </summary>       
+        private Song PickSong()
+        {
+            Random random = new Random();
+            var unusedSongs = Songs.Where(p => p.Used == false);
+
+            var randomNumber = random.Next(unusedSongs.Count());
+            var randomSong = unusedSongs.ElementAt(randomNumber);
+
+            randomSong.Selected = true;
+            randomSong.Used = true;
+
+            return randomSong;
+        }
     }
 }
